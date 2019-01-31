@@ -30,7 +30,7 @@ MongoClient.connect(url, {useNewUrlParser: true}, (err, client) => {
     //     console.log(result);
     // })
     // findOneAndDelete
-    col.findOneAndDelete({actor: "John"}).then( result => {
+    col.findOneAndDelete({text: "Walk the dog."}).then( result => {
         console.log(result);
     })
 
