@@ -9,6 +9,10 @@ const {Todo} = require('./models/todo');
 const {User} = require('./models/user');
 
 const app = express();
+// Set up port to allow heroku to set up env
+const port = process.env.PORT || 3000;
+
+
 //Middleware setup: https://www.npmjs.com/package/body-parser 
 app.use(bodyParser.json());
 // Setting up a route to post todos
@@ -52,8 +56,8 @@ app.get('/todos/:id', (req, res) => {
 
 });
 
-app.listen(3000, () => {
-    console.log('Listening on port 3000.');
+app.listen(port, () => {
+    console.log(`Listening on port ${port}.`);
 })
 
 
