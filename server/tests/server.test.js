@@ -21,6 +21,7 @@ beforeEach(done => {
     }).then(() => done())
 });
 
+// Testing POST
 describe('POST /todos', () => {
     it('Should create a new todo', done => {
         const text = 'Test todo POST';
@@ -71,6 +72,7 @@ describe('POST /todos', () => {
     });
 });
 
+// Testing GET
 describe('GET /todos', () => {
     it('Should get all todos', done => {
         request(app)
@@ -83,6 +85,7 @@ describe('GET /todos', () => {
     });
 });
 
+//Testing GET by id
 describe('GET /todos/:id', () => {
     //Testing for valid id
     it('Should return todo doc', done => {
@@ -98,8 +101,6 @@ describe('GET /todos/:id', () => {
     });
 
     // Testing for _id not found (valid)
-    
-
     it('Should return 404 if todo not found', done => {
         const _idNotFound = new ObjectID().toHexString();
 
@@ -119,3 +120,46 @@ describe('GET /todos/:id', () => {
             .end(done)
     });
 });
+
+// Testing DELETE by id
+describe('DELETE /todos/:id', () => {
+    const hexID = todos[1]._id.toHexString();
+    // Test for valid id
+    it('Should delete todo', done => {
+        request(app)
+            .delete(`/todos/${hexID}`)
+            .expect(200)
+            .expect( res => {
+                expect(res.body.todo._id).toBe(hexID) // Check if the todo returned is what we wanted to delete
+            })
+            .end((err, res) => {
+                if(err) {
+                    return done(err)
+                }
+
+                Todo.findById(hexID).then( todo => {
+                    expect(todo).toBeFalsy(); // Check that it is null
+                    done()
+                }).catch( err => done(err));
+            })
+    })
+
+    it('Should return 404 if todo not found', done => {
+        const _idNotFound = new ObjectID().toHexString();
+
+        request(app)
+            .delete(`/todos/${_idNotFound}`)
+            .expect(404)
+            .end(done)
+    })
+
+    // Testing for invalid id
+    const _idInvalid= '5c54920e';
+
+    it('Should return 404 for non-object ids', done => {
+        request(app)
+            .delete(`/todos/${_idInvalid}`)
+            .expect(404)
+            .end(done)
+    });
+})
