@@ -39,7 +39,7 @@ beforeEach(done => {
 // Testing POST
 describe('POST /todos', () => {
     it('Should create a new todo', done => {
-        const text = 'Test todo POST';
+        const text ='Third GET test todo';
 
         supertest
             .post('/todos')
@@ -190,7 +190,7 @@ describe('PATCH /todos/:id', () => {
         // Get the id
         const hexID = todos[1]._id.toHexString();
         const newBody = {
-            text: "Test text",
+            text: "Test PATCH text",
             completed: true
         }
         supertest
@@ -210,7 +210,7 @@ describe('PATCH /todos/:id', () => {
         // Get the id.
         const hexID = todos[1]._id.toHexString();
         const newBody = {
-            text: "Test text",
+            text: "Test PATCH text",
             completed: false
         }
         supertest

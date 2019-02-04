@@ -1,4 +1,4 @@
-// Vendor imports;
+// Vendor imports
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -7,6 +7,7 @@ const {
 } = require('mongodb');
 
 //Local
+const config = require('./config/config');
 const {
     mongoose
 } = require('./db/mongoose');
@@ -19,7 +20,7 @@ const {
 
 const app = express();
 // Set up port to allow heroku to set up env
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 
 //Middleware setup: https://www.npmjs.com/package/body-parser 
@@ -111,12 +112,20 @@ app.patch('/todos/:id', (req, res) => {
 
     // Update the db by using mongodb operators. Mongoose use new: instead of returnOriginal
     // https://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate 
-    Todo.findOneAndUpdate({_id: id}, {$set: body}, {new: true}).then( todo => {
-        if(!todo) {
+    Todo.findOneAndUpdate({
+        _id: id
+    }, {
+        $set: body
+    }, {
+        new: true
+    }).then(todo => {
+        if (!todo) {
             return res.status(404).send();
         }
-        res.send({todo});
-    }).catch( err => {
+        res.send({
+            todo
+        });
+    }).catch(err => {
         res.status(400).send();
     })
 
