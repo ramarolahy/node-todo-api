@@ -3,6 +3,7 @@ const validator = require('validator');
 const Schema = mongoose.Schema;
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 // Create User schema
 // schemas will use validators for emails: see https://www.npmjs.com/package/validator 
@@ -92,6 +93,24 @@ UserSchema.statics.findByToken = function (token) {
     })
 
 };
+
+// Hashing user passwords with mongoose middleware
+// with pre middleware functions, the function hash is called BEFORE save
+UserSchema.pre('save', function (next) {
+    const user = this;
+    const password = user.password;
+    // We only want to hash string passwords, not hashed passwords (example if the user modifies their email later one)
+    if (user.isModified()) {
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(password, salt,  (err, hash) => {
+                user.password =  hash;
+                next();
+            });
+        });
+    } else {
+        next()
+    }
+})
 
 const User = mongoose.model('User', UserSchema);
 

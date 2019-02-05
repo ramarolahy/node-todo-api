@@ -2,24 +2,14 @@
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
-const {
-    ObjectID
-} = require('mongodb');
+const {ObjectID} = require('mongodb');
 
 //Local
 const config = require('./config/config');
-const {
-    mongoose
-} = require('./db/mongoose');
-const {
-    Todo
-} = require('./models/todo');
-const {
-    User
-} = require('./models/user');
-const {
-    authenticate
-} = require('./middleware/authenticate')
+const {mongoose} = require('./db/mongoose');
+const {Todo} = require('./models/todo');
+const {User} = require('./models/user');
+const {authenticate} = require('./middleware/authenticate')
 
 const app = express();
 // Set up port to allow heroku to set up env
