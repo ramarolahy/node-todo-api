@@ -95,7 +95,7 @@ app.patch('/todos/:id', (req, res) => {
     // _.pick will allow us to restrict the user from modifying/adding unwanted properties
     // We don't want the user to update id or completedAt.
     // see https://lodash.com/docs/4.17.11#pick 
-    const body = _.pick(req.body, ['text', 'completed'])
+    const body = _.pick(req.body, ['text', 'completed']);
 
     //validate id
     if (!ObjectID.isValid(id)) {
@@ -112,13 +112,7 @@ app.patch('/todos/:id', (req, res) => {
 
     // Update the db by using mongodb operators. Mongoose use new: instead of returnOriginal
     // https://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate 
-    Todo.findOneAndUpdate({
-        _id: id
-    }, {
-        $set: body
-    }, {
-        new: true
-    }).then(todo => {
+    Todo.findOneAndUpdate({_id: id}, {$set: body}, {new: true}).then(todo => {
         if (!todo) {
             return res.status(404).send();
         }
@@ -131,6 +125,22 @@ app.patch('/todos/:id', (req, res) => {
 
 })
 
+// POST /users : Signup route
+// Read about token-based authentication here:
+// https://appdividend.com/2018/02/07/node-js-jwt-authentication-tutorial-scratch/
+app.post('/users', (req, res) => {
+    const body = _.pick(req.body, ['firstname', 'email', 'password']); // This already gets the user input
+    const user = new User(body);
+
+    user.save().then(() => {
+        return user.generateAuthToken();
+    }).then( token => {
+        // prefixing a header with x- is to customize it
+        res.header('x-auth', token).send(user)
+    }).catch(err => {
+        res.status(400).send(err);
+    })
+});
 
 
 app.listen(port, () => {
