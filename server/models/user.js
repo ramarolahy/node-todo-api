@@ -44,16 +44,19 @@ const UserSchema = new Schema({
     }]
 });
 
+// The following methods need the 'this' binding
+//=======================================================
 // Override a method so we can leave off password and token to be sent back to client
 UserSchema.methods.toJSON = function () {
-    const user = this;
+    const user = this; // We use user because this will be an instance method
     const userObject = user.toObject();
 
     return _.pick(userObject, ['_id', 'email']);
 };
 
+// .methods turns methods into an instance method
 UserSchema.methods.generateAuthToken = function () {
-    const user =  this;
+    const user =  this; // We use user because this will be an instance method
     const access = 'auth';
     const token = jwt.sign({_id: user._id.toHexString(), access}, 'addSomeSalt').toString();
 
@@ -67,6 +70,27 @@ UserSchema.methods.generateAuthToken = function () {
         // this will be passed on to another promise in server.js
         return token;
     })
+};
+// .statics turns methods into a model method
+UserSchema.statics.findByToken = function (token) {
+    const User = this; // We use User because this will be a model method
+    let decoded;
+
+    try {
+        decoded = jwt.verify(token, 'addSomeSalt')
+    } catch (err) {
+        // return new Promise( (resolve, reject) => {
+        //     reject();
+        // })
+        return Promise.reject();  // Same thing bu simpler
+    }
+
+    return User.findOne({
+        _id: decoded._id,
+        'tokens.token': token, // Using quotes allow to query a nested document
+        'tokens.access': 'auth'
+    })
+
 };
 
 const User = mongoose.model('User', UserSchema);

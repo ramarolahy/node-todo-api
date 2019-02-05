@@ -17,6 +17,9 @@ const {
 const {
     User
 } = require('./models/user');
+const {
+    authenticate
+} = require('./middleware/authenticate')
 
 const app = express();
 // Set up port to allow heroku to set up env
@@ -112,7 +115,13 @@ app.patch('/todos/:id', (req, res) => {
 
     // Update the db by using mongodb operators. Mongoose use new: instead of returnOriginal
     // https://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate 
-    Todo.findOneAndUpdate({_id: id}, {$set: body}, {new: true}).then(todo => {
+    Todo.findOneAndUpdate({
+        _id: id
+    }, {
+        $set: body
+    }, {
+        new: true
+    }).then(todo => {
         if (!todo) {
             return res.status(404).send();
         }
@@ -134,7 +143,7 @@ app.post('/users', (req, res) => {
 
     user.save().then(() => {
         return user.generateAuthToken();
-    }).then( token => {
+    }).then(token => {
         // prefixing a header with x- is to customize it
         res.header('x-auth', token).send(user)
     }).catch(err => {
@@ -142,11 +151,13 @@ app.post('/users', (req, res) => {
     })
 });
 
+app.get('/users/me', authenticate, (req, res) => {
+    res.send(req.user);
+});
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}.`);
 })
-
 
 module.exports = {
     app
