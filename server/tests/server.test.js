@@ -1,45 +1,32 @@
 const _ = require('lodash');
 const expect = require('expect');
 const request = require('supertest');
-
 const {
     ObjectID
 } = require('mongodb');
 
+const {app} = require('./../server');
+const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 const {
-    app
-} = require('./../server');
-const {
-    Todo
-} = require('./../models/todo');
+    todos,
+    populateTodos,
+    users,
+    populateUsers
+} = require('./seed/seed')
 
 const supertest = request(app);
 
-// Adding seed data
-const todos = [{
-    _id: new ObjectID(),
-    text: "First GET test todo",
-    completed: false,
-    completedAt: 20171021
-}, {
-    _id: new ObjectID(),
-    text: 'Second GET test todo',
-    completed: true,
-    completedAt: 2010
-}]
-
 // Delete every todos before each tests so we only insert 1 for test purpose
-beforeEach(done => {
-    Todo.deleteMany().then(() => {
-        return Todo.insertMany(todos);
-    }).then(() => done())
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
+
 //============================================
 //============================================
 // Testing POST
 describe('POST /todos', () => {
     it('Should create a new todo', done => {
-        const text ='Third GET test todo';
+        const text = 'Third GET test todo';
 
         supertest
             .post('/todos')
@@ -227,3 +214,88 @@ describe('PATCH /todos/:id', () => {
     })
 
 })
+//============================================
+//============================================
+// Testing GET /users/me
+describe('GET /users/me', () => {
+    it('Should return user if authenticated', done => {
+        supertest
+            .get('/users/me')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .expect(res => {
+                expect(res.body._id).toBe(users[0]._id.toHexString());
+                expect(res.body.email).toBe(users[0].email);
+            })
+            .end(done)
+    })
+
+    it('Should return 401 is user not authenticated', done => {
+        supertest
+            .get('/users/me')
+            .expect(401)
+            .expect(res => {
+                expect(res.body).toEqual({
+                    "error": "Unauthorized access."
+                })
+            })
+            .end(done)
+    })
+})
+//============================================
+//============================================
+// Testing POST /users
+describe('POST /users', () => {
+    it('Should create new user', done => {
+        
+        const firstname = "Doe";
+        const email = "doe@test.com";
+        const password = "testPwd123";
+
+        supertest
+            .post('/users')
+            .send({firstname, email, password})
+            .expect(200)
+            .expect(res => {
+                expect(res.headers['x-auth']).toBeTruthy();
+                expect(res.body._id).toBeTruthy();
+                expect(res.body.email).toBe(email);
+            })
+            .end( err => {
+                if(err) {
+                    return done(err);
+                }
+
+                User.findOne({email}).then( user =>{
+                    expect(user).toBeTruthy();
+                    expect(user.password).not.toBe(password);
+                    done();
+                })
+            });
+    })
+
+    it('Should return validation errors if request invalid', done => {
+        const firstname = "Doe";
+        const email = "doetest.com";
+        const password = "test";
+
+        supertest
+            .post('/users')
+            .send({firstname, email, password})
+            .expect(400)
+            .end(done)
+    })
+
+    it('Should not create user if email in use', done => {
+        const firstname = "Jane";
+        const email = "jane@email.com";
+        const password = "testPwd123";
+
+        supertest
+            .post('/users')
+            .send({firstname, email, password})
+            .expect(400)
+            .end(done)
+    })
+
+});
