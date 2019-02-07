@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
-const Schema = mongoose.Schema;
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
+
+const Schema = mongoose.Schema;
 
 // Create User schema
 // schemas will use validators for emails: see https://www.npmjs.com/package/validator 
@@ -93,22 +94,51 @@ UserSchema.statics.findByToken = function (token) {
     })
 
 };
+// Find user that matches the email and password passed in
+UserSchema.statics.findByCredentials = function (email, password) {
+    const User = this;
+    // Find the user using the email provided
+    // IF FOUND, compare passwords
+    return User.findOne({email}).then( user => {
+        if (!user) {
+            return Promise.reject();
+        }
+        // We are going to create a new Promise where bcrypt can be called in. bcrypt can only take callbacks inside
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(password, user.password, (err, res) => {
+                //(res) ? resolve(user) : reject();
+                if (res) {
+                    resolve(user);
+                } else {
+                    reject();
+                }
+            });
+        });
+
+        // // As of bcryptjs 2.4.0, compare returns a promise if callback is omitted:
+        // return bcrypt.compare(password, user.password).then( res => {
+        //         res.send(user);
+        //     }).catch( err => {
+        //         res.status(400).send({"Error": "Bad Request."})
+        //     })
+    });
+};
 
 // Hashing user passwords with mongoose middleware
 // with pre middleware functions, the function hash is called BEFORE save
 UserSchema.pre('save', function (next) {
     const user = this;
-    const password = user.password;
+  
     // We only want to hash string passwords, not hashed passwords (example if the user modifies their email later one)
-    if (user.isModified()) {
+    if (user.isModified('password')) {
         bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(password, salt,  (err, hash) => {
-                user.password =  hash;
+            bcrypt.hash(user.password, salt, (err, hash) => {
+                user.password = hash;
                 next();
             });
         });
     } else {
-        next()
+        next();
     }
 })
 
