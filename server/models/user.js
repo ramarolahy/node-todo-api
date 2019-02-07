@@ -106,21 +106,10 @@ UserSchema.statics.findByCredentials = function (email, password) {
         // We are going to create a new Promise where bcrypt can be called in. bcrypt can only take callbacks inside
         return new Promise((resolve, reject) => {
             bcrypt.compare(password, user.password, (err, res) => {
-                //(res) ? resolve(user) : reject();
-                if (res) {
-                    resolve(user);
-                } else {
-                    reject();
-                }
+                (res) ? resolve(user) : reject();
             });
         });
-
-        // // As of bcryptjs 2.4.0, compare returns a promise if callback is omitted:
-        // return bcrypt.compare(password, user.password).then( res => {
-        //         res.send(user);
-        //     }).catch( err => {
-        //         res.status(400).send({"Error": "Bad Request."})
-        //     })
+        // => As of bcryptjs 2.4.0, compare returns a promise if callback is omitted
     });
 };
 

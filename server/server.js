@@ -135,7 +135,7 @@ app.post('/users', (req, res) => {
         return user.generateAuthToken();
     }).then(token => {
         // prefixing a header with x- is to customize it
-        res.header('x-auth', token).send(user)
+        res.header('x-auth', token).send(user);
     }).catch(err => {
         res.status(400).send(err);
     })
@@ -152,7 +152,9 @@ app.post('/users/login', (req, res) => {
     const body = _.pick(req.body, ['email', 'password']);
 
     User.findByCredentials(body.email, body.password).then(user => {
-        res.send(user);
+        return user.generateAuthToken().then(token => {
+            res.header('x-auth', token).send(user);
+        });
     }).catch( err => {
         res.status(400).send(err);
     });
